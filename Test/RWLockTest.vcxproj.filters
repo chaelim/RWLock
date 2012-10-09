@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="RWLockTest.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Random\mersenne.cpp">
+      <Filter>Random</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Random\randomc.h">
+      <Filter>Random</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Random">
+      <UniqueIdentifier>{88b47d92-15b9-4f5c-abdc-3503795d656b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
+    <None Include="..\LICENSE" />
+  </ItemGroup>
+</Project>
