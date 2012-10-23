@@ -2,7 +2,7 @@
  *      File: RWLock.cpp
  *    Author: CS Lim
  *   Purpose: Implement asymmetric reader writer lock originally 
- *				from Dmitriy Vyukov at www.1024cores.net
+ *                from Dmitriy Vyukov at www.1024cores.net
  * 
  *   Notes:
  *      - Linearly scales up to number of readers same as number of cores
@@ -17,7 +17,7 @@
  *
  *
  *          W -> R : Writer entering Reader lock allowed and keep maintain
- *					 writer status.
+ *                     writer status.
  *
  *          W -> W : Re-entrance of Writer lock allowed.
  *
@@ -139,7 +139,7 @@ void CRWLock::LeaveWrite ()
 
 void InitRWLock ()
 {
-	s_threadIndex = 0;
+    s_threadIndex = 0;
 }
 
 

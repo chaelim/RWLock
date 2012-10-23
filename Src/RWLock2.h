@@ -17,11 +17,11 @@
 class CRWLock2
 {
 private:
-    SRWLOCK	*	m_lock;
+    SRWLOCK    *    m_lock;
 
 public:
     CRWLock2 ();
-	~CRWLock2 ();
+    ~CRWLock2 ();
     void EnterRead ();
     void EnterWrite ();
     void LeaveRead ();
