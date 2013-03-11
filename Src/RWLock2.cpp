@@ -16,10 +16,8 @@
 static int s_numProcs = 0;
 static __declspec(thread) unsigned t_procId;    
 
-static int GetNumberOfProcessors ()
-{
-    if (s_numProcs == 0)
-    {
+static int GetNumberOfProcessors() {
+    if (s_numProcs == 0) {
         SYSTEM_INFO sysinfo;
         GetSystemInfo( &sysinfo );
         s_numProcs = sysinfo.dwNumberOfProcessors;
@@ -30,45 +28,33 @@ static int GetNumberOfProcessors ()
 //===========================================================================
 // CRWLock2 implementation
 //===========================================================================
-CRWLock2::CRWLock2 ()
-{
+CRWLock2::CRWLock2() {
     m_lock = new SRWLOCK[GetNumberOfProcessors()];
     for (int i = 0; i < GetNumberOfProcessors(); i++)
-    {
         InitializeSRWLock(&m_lock[i]);
-    }
 }
 
-CRWLock2::~CRWLock2 ()
-{
+CRWLock2::~CRWLock2() {
     delete [] m_lock;
 }
 
-void CRWLock2::EnterRead ()
-{
+void CRWLock2::EnterRead() {
     t_procId = GetCurrentProcessorNumber();
     AcquireSRWLockShared(&m_lock[t_procId]);
 }
 
-void CRWLock2::LeaveRead ()
-{
+void CRWLock2::LeaveRead() {
     ReleaseSRWLockShared(&m_lock[t_procId]);
 }
 
-void CRWLock2::EnterWrite ()
-{
+void CRWLock2::EnterWrite() {
     for (int i = 0; i < GetNumberOfProcessors(); i++)
-    {
         AcquireSRWLockExclusive(&m_lock[i]);
-    }
 }
 
-void CRWLock2::LeaveWrite ()
-{
+void CRWLock2::LeaveWrite() {
     for (int i = 0; i < GetNumberOfProcessors(); i++)
-    {
         ReleaseSRWLockExclusive(&m_lock[i]);
-    }
 }
 
 

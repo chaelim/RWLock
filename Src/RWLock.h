@@ -17,8 +17,7 @@ const unsigned MAX_RWLOCK_READER_COUNT = 64;
 //===========================================================================
 // CRWLock Declaration
 //===========================================================================
-class CRWLock
-{
+class CRWLock {
 private:
     CCritSect       m_critSect; 
     unsigned        m_ownerThreadId;

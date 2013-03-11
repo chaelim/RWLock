@@ -41,21 +41,16 @@ static long s_threadIndex;
 //===========================================================================
 // CRWLock implementation
 //===========================================================================
-CRWLock::CRWLock ()
-{
+CRWLock::CRWLock() {
     m_writerPending = false;
 
     for (unsigned i = 0; i < COUNT_OF(m_readers); i++)
-    {
         m_readers[i] = false; 
-    }
 }
 
-void CRWLock::EnterRead ()
-{
+void CRWLock::EnterRead() {
     // Initialize per-thread index if this is first call from current thread
-    if (t_curThreadIndex == 0)
-    {
+    if (t_curThreadIndex == 0) {
         t_curThreadIndex = AtomicIncrement(&s_threadIndex);
         _ASSERT(t_curThreadIndex < MAX_RWLOCK_READER_COUNT);
     }
@@ -65,8 +60,7 @@ void CRWLock::EnterRead ()
     // Pending write lock exists?
     //    No explicit #StoreLoad but it will be implicitly executed 
     //    by FlushProcessWriteBuffers() in EnterWrite()
-    if (m_writerPending)
-    {
+    if (m_writerPending) {
         // If writer is pending then signal that we see it
         // and wait for writer to complete 
         m_readers[t_curThreadIndex] = false;
@@ -81,8 +75,7 @@ void CRWLock::EnterRead ()
     _ReadWriteBarrier();
 }
 
-void CRWLock::LeaveRead ()
-{
+void CRWLock::LeaveRead() {
     _ASSERT(t_curThreadIndex != 0);
 
     // Prevent compiler re-ordering
@@ -91,10 +84,8 @@ void CRWLock::LeaveRead ()
     m_readers[t_curThreadIndex] = false;
 }
 
-void CRWLock::EnterWrite ()
-{
-    if (t_curThreadIndex == 0)
-    {
+void CRWLock::EnterWrite() {
+    if (t_curThreadIndex == 0) {
         t_curThreadIndex = AtomicIncrement(&s_threadIndex);
         _ASSERT(t_curThreadIndex < MAX_RWLOCK_READER_COUNT);
     }
@@ -121,24 +112,21 @@ void CRWLock::EnterWrite ()
     // so no race conditions
     for (unsigned i = 0; i < COUNT_OF(m_readers); i++) {
         // Wait for all readers to complete
-        while (m_readers[i])
-        {
+        while (m_readers[i]) {
             // Yield CPU to another thread
             SwitchToThread();
         }
     }
 }
 
-void CRWLock::LeaveWrite ()
-{
+void CRWLock::LeaveWrite() {
     _ASSERT(t_curThreadIndex != 0);
 
     m_writerPending = false;
     m_critSect.Leave();
 }
 
-void InitRWLock ()
-{
+void InitRWLock() {
     s_threadIndex = 0;
 }
 
