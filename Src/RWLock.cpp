@@ -1,8 +1,8 @@
 /**
  *      File: RWLock.cpp
  *    Author: CS Lim
- *   Purpose: Implement asymmetric reader writer lock originally 
- *                from Dmitriy Vyukov at www.1024cores.net
+ *   Purpose: Implement asymmetric reader writer lock based on 
+ *                Dmitriy Vyukov's implementation at www.1024cores.net
  * 
  *   Notes:
  *      - Linearly scales up to number of readers same as number of cores
@@ -10,7 +10,7 @@
  *        due to using FlushProcessWriteBuffers() API and thread local storage
  *        (in case of implemented inside a dll) 
  *      - MAX_RWLOCK_READER_COUNT limits total number of threads
- *      - Reentrance support
+ *      - Reentrance support:
  *          R -> R (Re-entrance of Reader lock)
  *              Case #1 If no writer pending then reacquire reader lock.
  *              Case #2 If writer is pending then Wait for writer to complete.
@@ -21,8 +21,9 @@
  *
  *          W -> W : Re-entrance of Writer lock allowed.
  *
- *      !!! IMPORTANT !!!
- *          R -> W : Upgrading lock is "NOT" supported and can cause deadlock.
+ *  !!! IMPORTANT !!!
+ *          R -> W : Upgrading read lock to write lock is "NOT" 
+ *                   supported and can cause deadlock.
  */
 
 #include "stdafx.h"
@@ -96,7 +97,7 @@ void CRWLock::EnterWrite() {
     // Signal we (writer) are waiting for reader(s) to complete
     m_writerPending = true;
 
-    // FlushProcessWriteBuffers() API:
+    // FlushProcessWriteBuffers() API (From MSDN):
     //  - Implicitly execute full memory barrier on all other processors.
     //  - Generates an interprocessor interrupt (IPI) to all processors that
     //    are part of the current process affinity.
