@@ -1,14 +1,14 @@
 /**
  *      File: RWLock.cpp
  *    Author: CS Lim
- *   Purpose: Implement asymmetric reader writer lock based on 
+ *   Purpose: Implement asymmetric reader writer lock based on
  *                Dmitriy Vyukov's implementation at www.1024cores.net
- * 
+ *
  *   Notes:
  *      - Linearly scales up to number of readers same as number of cores
- *      - Only Vista or Windows Server 2008 and later Windows are supported
+ *      - Only Vista or Windows Server 2008 and later are supported
  *        due to using FlushProcessWriteBuffers() API and thread local storage
- *        (in case of implemented inside a dll) 
+ *        (in case of implemented inside a dll)
  *      - MAX_RWLOCK_READER_COUNT limits total number of threads
  *      - Reentrance support:
  *          R -> R (Re-entrance of Reader lock)
@@ -22,7 +22,7 @@
  *          W -> W : Re-entrance of Writer lock allowed.
  *
  *  !!! IMPORTANT !!!
- *          R -> W : Upgrading read lock to write lock is "NOT" 
+ *          R -> W : Upgrading read lock to write lock is "NOT"
  *                   supported and can cause deadlock.
  */
 
@@ -35,8 +35,8 @@
 //===========================================================================
 
 // Unique thread index [1 .. (MAX_RWLOCK_READER_COUNT - 1)]
-static __declspec(thread) unsigned t_curThreadIndex;    
-static long s_threadIndex;
+static __declspec(thread) unsigned t_curThreadIndex;
+static long s_threadIndex = 0;
 
 
 //===========================================================================
@@ -46,7 +46,7 @@ CRWLock::CRWLock() {
     m_writerPending = false;
 
     for (unsigned i = 0; i < COUNT_OF(m_readers); i++)
-        m_readers[i] = false; 
+        m_readers[i] = false;
 }
 
 void CRWLock::EnterRead() {
@@ -59,11 +59,11 @@ void CRWLock::EnterRead() {
     m_readers[t_curThreadIndex] = true;
 
     // Pending write lock exists?
-    //    No explicit #StoreLoad but it will be implicitly executed 
+    //    No explicit #StoreLoad but it will be implicitly executed
     //    by FlushProcessWriteBuffers() in EnterWrite()
     if (m_writerPending) {
         // If writer is pending then signal that we see it
-        // and wait for writer to complete 
+        // and wait for writer to complete
         m_readers[t_curThreadIndex] = false;
 
         m_critSect.Enter();
@@ -91,7 +91,7 @@ void CRWLock::EnterWrite() {
         _ASSERT(t_curThreadIndex < MAX_RWLOCK_READER_COUNT);
     }
 
-    // Write enters critical section
+    // Writer enters critical section
     m_critSect.Enter();
 
     // Signal we (writer) are waiting for reader(s) to complete
@@ -104,17 +104,18 @@ void CRWLock::EnterWrite() {
     //  - Uses IPI to "synchronously" signal all processors.
     //  - It guarantees the visibility of write operations performed on one
     //    processor to the other processors.
-    //  - Supported since Windows Vista and Windows Server 2008
+    //  - Supported since Windows Vista and Windows Server 2008.
     FlushProcessWriteBuffers();
 
     // Here we are sure that:
-    //       (1) writer will see (m_readers[i]    == true) 
-    //    or (2) reader will see (m_writerPending == true) 
+    //       (1) writer will see (m_readers[i]    == true)
+    //    or (2) reader will see (m_writerPending == true)
     // so no race conditions
     for (unsigned i = 0; i < COUNT_OF(m_readers); i++) {
         // Wait for all readers to complete
         while (m_readers[i]) {
             // Yield CPU to another thread
+            // @@@ TODO: Backoff
             SwitchToThread();
         }
     }
@@ -146,7 +147,7 @@ void InitRWLock() {
 //
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE

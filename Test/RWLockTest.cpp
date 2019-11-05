@@ -2,7 +2,7 @@
  *      File: RWLockTest.cpp
  *    Author: CS Lim
  *   Purpose: Multithreaded R/W lock performance testing program
- * 
+ *
  */
 
 
@@ -24,38 +24,48 @@ char ( &_ArraySizeHelper( T (&array)[N] ))[N];
 //===========================================================================
 // R/W lock abstract class
 //===========================================================================
-struct __declspec(novtable) RwLock {
+struct __declspec(novtable) RWLock {
 public:
-    virtual void EnterRead () = 0;
-    virtual void LeaveRead () = 0;
-    virtual void EnterWrite () = 0;
-    virtual void LeaveWrite () = 0;
+    virtual void EnterRead() = 0;
+    virtual void LeaveRead() = 0;
+    virtual void EnterWrite() = 0;
+    virtual void LeaveWrite() = 0;
 
-    virtual char* GetName () = 0;
+    virtual char* GetName() = 0;
 };
 
 //===========================================================================
 // Windows slim reader/writer (SRW) lock.
 //===========================================================================
-class CSRWLock : public RwLock {
+class CSRWLock : public RWLock {
 public:
-    CSRWLock() {
+    CSRWLock()
+    {
         InitializeSRWLock(&m_lock);
     }
-    void EnterRead() {
+    
+    void EnterRead()
+    {
         AcquireSRWLockShared(&m_lock);
     }
-    void LeaveRead() {
+    
+    void LeaveRead()
+    {
         ReleaseSRWLockShared(&m_lock);
     }
-    void EnterWrite() {
+    
+    void EnterWrite()
+    {
         AcquireSRWLockExclusive(&m_lock);
     }
-    void LeaveWrite() {
+    
+    void LeaveWrite()
+    {
         ReleaseSRWLockExclusive(&m_lock);
     }
 
-    char * GetName() {
+    char * GetName()
+    {
         return "SRWLock";
     }
 
@@ -63,23 +73,32 @@ private:
     SRWLOCK m_lock;
 };
 
-class CAsymRWLockTest : public RwLock {
+class CAsymRWLockTest : public RWLock {
 public:
     CAsymRWLockTest() { }
-    void EnterRead() {
+
+    void EnterRead()
+    {
         m_lock.EnterRead();
     }
-    void LeaveRead() {
+    
+    void LeaveRead()
+    {
         m_lock.LeaveRead();
     }
-    void EnterWrite() {
+    
+    void EnterWrite()
+    {
         m_lock.EnterWrite();
     }
-    void LeaveWrite() {
+
+    void LeaveWrite()
+    {
         m_lock.LeaveWrite();
     }
 
-    char * GetName() {
+    char * GetName()
+    {
         return "Asymmetric";
     }
 
@@ -87,23 +106,32 @@ private:
     CRWLock m_lock;
 };
 
-class CPerProcRWLockTest : public RwLock {
+class CPerProcRWLockTest : public RWLock {
 public:
     CPerProcRWLockTest() { }
-    void EnterRead() {
+
+    void EnterRead()
+    {
         m_lock.EnterRead();
     }
-    void LeaveRead() {
+    
+    void LeaveRead()
+    {
         m_lock.LeaveRead();
     }
-    void EnterWrite() {
+    
+    void EnterWrite()
+    {
         m_lock.EnterWrite();
     }
-    void LeaveWrite() {
+    
+    void LeaveWrite()
+    {
         m_lock.LeaveWrite();
     }
 
-    char * GetName() {
+    char * GetName()
+    {
         return "Per-Proc";
     }
 
@@ -112,26 +140,34 @@ private:
 };
 
 //===========================================================================
-// Using Critical Section to use it as base line performance and can compare
+// Using Critical Section to use it as baseline performance and can compare
 // RWLock's worst case (100% writer) with simple critical section.
 //===========================================================================
-class CCritsectRwLock : public RwLock {
+class CCritsectRwLock : public RWLock {
 public:
-    void EnterRead() {
+    void EnterRead()
+    {
         m_lock.Enter();
     }
-    void LeaveRead() {
+    
+    void LeaveRead()
+    {
         m_lock.Leave();
     }
-    void EnterWrite() {
+    
+    void EnterWrite()
+    {
         m_lock.Enter();
     }
-    void LeaveWrite() {
+
+    void LeaveWrite()
+    {
         m_lock.Leave();
     }
 
-    char * GetName() {
-        return "Critsect";
+    char * GetName()
+    {
+        return "CritSect";
     }
 
 private:
@@ -155,8 +191,8 @@ typedef list<TestItem *> TEST_LIST;
 
 struct TestCase {
     char *      name;
-    float        readRate;    // Read ratio
-    RwLock *    rwLocks[MAX_RWLOCKS];
+    float       readRate;    // Read ratio
+    RWLock *    rwLocks[MAX_RWLOCKS];
 
 };
 
@@ -164,12 +200,12 @@ struct TestCase {
 // Per thread stat
 //===========================================================================
 struct ThreadStat {
-    RwLock *        rwLock;
-    float            readRate;
-    int                threadIdx;
-    __int64            startTime;
+    RWLock *        rwLock;
+    float           readRate;
+    int             threadIdx;
+    __int64         startTime;
     __int64         endTime;
-    ULONG64            cpuCycles;
+    ULONG64         cpuCycles;
     unsigned        iterRead;
     unsigned        iterWrite;
 };
@@ -203,65 +239,65 @@ TestCase g_testCases[] = {
     {
         "R(99%)/W(1%)",
         (float)0.99f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(95%)/W(5%)",
         (float)0.95f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(90%)/W(10%)",
         (float)0.99f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(80%)/W(20%)",
         (float)0.80f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(70%)/W(30%)",
         (float)0.70f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(50%)/W(50%)",
         (float)0.50f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(30%)/W(70%)",
         (float)0.30f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
-    { 
+    {
         "R(10%)/W(90%)",
         (float)0.10f,
-        { 
+        {
             &g_asymRWLock, &g_perProcRWLock,
-            &g_slimRWLock, &g_critsectRwLock, 
+            &g_slimRWLock, &g_critsectRwLock,
         }
     },
 };
@@ -286,7 +322,8 @@ static __int64 GetPerfFreq() {
 static void ReadList() {
     volatile unsigned seq = g_testList.front()->data;
     TEST_LIST::iterator it;
-    for (it = g_testList.begin() ; it != g_testList.end(); it++) {
+    for (it = g_testList.begin() ; it != g_testList.end(); it++)
+    {
         if ((*it)->data != seq)
             _ASSERT(false);
     }
@@ -308,7 +345,8 @@ static void WriteList() {
     item->data = data;
 }
 
-static DWORD WINAPI ThreadProc (LPVOID lpParameter) {
+static DWORD WINAPI ThreadProc (LPVOID lpParameter)
+{
     ThreadStat * threadStat = (ThreadStat *) lpParameter;
 
     AtomicIncrement(&g_readyWaitThreads);
@@ -318,13 +356,16 @@ static DWORD WINAPI ThreadProc (LPVOID lpParameter) {
     CRandomMersenne ranObject(threadStat->threadIdx);
 
     float readRate  = threadStat->readRate;
-    float rnd        = (float)ranObject.Random();
+    float rnd       = (float)ranObject.Random();
 
     // Run test
-    threadStat->startTime = GetPerfCounters(); 
+    threadStat->startTime = GetPerfCounters();
     QueryThreadCycleTime(GetCurrentThread(), &threadStat->cpuCycles);
-    while (g_runTest) {
-        if (rnd < readRate || readRate == 1.0f) {
+
+    while (g_runTest)
+    {
+        if (rnd < readRate || readRate == 1.0f)
+        {
             threadStat->rwLock->EnterRead();
             rnd    = (float)ranObject.Random();
             ReadList();
@@ -332,7 +373,8 @@ static DWORD WINAPI ThreadProc (LPVOID lpParameter) {
             threadStat->rwLock->LeaveRead();
 
         }
-        else {
+        else
+        {
             threadStat->rwLock->EnterWrite();
             rnd    = (float)ranObject.Random();
             ReadList();
@@ -343,6 +385,7 @@ static DWORD WINAPI ThreadProc (LPVOID lpParameter) {
 
     }
     threadStat->endTime = GetPerfCounters();
+
     ULONG64 cpuCycles;
     QueryThreadCycleTime(GetCurrentThread(), &cpuCycles);
     threadStat->cpuCycles = cpuCycles - threadStat->cpuCycles;
@@ -351,10 +394,12 @@ static DWORD WINAPI ThreadProc (LPVOID lpParameter) {
 }
 
 
-void InitTest() {
+void InitTest()
+{
     // Init test data. Add all test items to free list.
     TestItem * item;
-    for (int i = 0; i < TOTAL_TEST_ITEM; i++) {
+    for (int i = 0; i < TOTAL_TEST_ITEM; i++)
+    {
         item = (TestItem *)_aligned_malloc(sizeof(TestItem), CACHE_LINE);
         g_freeList.push_back(item);
         item++;
@@ -364,14 +409,16 @@ void InitTest() {
 
     SYSTEM_INFO info;
     GetSystemInfo(&info);
-    g_numProcessors = info.dwNumberOfProcessors; 
+    g_numProcessors = info.dwNumberOfProcessors;
     g_totalThreads  = info.dwNumberOfProcessors * 2;
     printf("Number of Processors: %d\n", info.dwNumberOfProcessors);
 }
 
-void InitThreads(RwLock * rwLock, float readRate, int threadCount) {
+void InitThreads(RWLock * rwLock, float readRate, int threadCount)
+{
     ZeroMemory(&g_threadStats, sizeof(g_threadStats));
-    for (int i = 0; i < threadCount; i++) {
+    for (int i = 0; i < threadCount; i++)
+    {
         g_threadStats[i].threadIdx = i;
         g_threadStats[i].rwLock = rwLock;
         g_threadStats[i].readRate = readRate;
@@ -393,15 +440,15 @@ void InitThreads(RwLock * rwLock, float readRate, int threadCount) {
 
 void RunOneTest(
     unsigned    testId,
-    RwLock *    rwLock,
+    RWLock *    rwLock,
     float        readRate,
     unsigned    workSize,
-    unsigned    threadCount
-) {
+    unsigned    threadCount)
+{
     // Create test threads
     InitThreads(rwLock, readRate, threadCount);
 
-    // Wait until all threads are redy and signal to start testing
+    // Wait until all threads are ready and signal to start testing
     while ((unsigned)g_readyWaitThreads < threadCount)
         Sleep(100);
 
@@ -411,11 +458,14 @@ void RunOneTest(
     // Start test //
     ////////////////
     g_runTest = true;
+    MemoryBarrier();
+
     Sleep(TOTAL_TEST_TIME_MS);
 
     // Cause all threads exit
     g_runTest = false;
-    
+    MemoryBarrier();
+
     // Wait all thread exit
     WaitForMultipleObjects(threadCount, g_threads, true, INFINITE);
     ResetEvent(g_runTestEvent);
@@ -425,14 +475,15 @@ void RunOneTest(
 
 
 
-    // Collect test result stored in per-thread data
+    // Collects test result stored in per-thread data
     __int64 procCounter = 0;
     __int64 totalReads  = 0;
     __int64 totalWrties = 0;
     ULONG64    totalCpuCycles = 0;
     for (unsigned i = 0; i < threadCount; i++) {
         ThreadStatAligned *threadStat = &g_threadStats[i];
-        if (threadStat->startTime) {
+        if (threadStat->startTime)
+        {
             procCounter += threadStat->endTime - threadStat->startTime;
             totalCpuCycles += threadStat->cpuCycles;
             totalReads  += threadStat->iterRead;
@@ -450,7 +501,7 @@ void RunOneTest(
     // Average total perf counter for a thread
     float freq = (float) procCounter / (float) threadCount;
     // Frequency per second
-    freq = freq / (float)GetPerfFreq();               
+    freq = freq / (float)GetPerfFreq();
 
     printf(
         "%3d, %5d, %12s,  %2d, %10.1f, %10.1f, %10.1f, %8.1f\n",
@@ -465,7 +516,8 @@ void RunOneTest(
     );
 }
 
-static void RunTests() {
+static void RunTests()
+{
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
     __int64 startCounter = GetPerfCounters();
@@ -473,34 +525,40 @@ static void RunTests() {
     int testId = 0;
 
     // For differnt dummy load sizes
-    for (int worksize = 100; worksize <= 1000; worksize *= 2) {
+    for (int worksize = 100; worksize <= 1000; worksize *= 2)
+    {
         TestItem * item;
 
         // Move all to free list
-        while (!g_testList.empty()) {
+        while (!g_testList.empty())
+        {
             item = g_testList.front();
             g_testList.pop_front();
             g_freeList.push_back(item);
         }
 
         // Add worksize items (dummy load)
-        for (int i = 0; i < worksize; i++) {
+        for (int i = 0; i < worksize; i++)
+        {
             item = g_freeList.front();
             g_freeList.pop_front();
 
             item->data = worksize;
             g_testList.push_back(item);
-        }    
+        }
 
         // For each test to run
-        for (int i = 0; i < countof(g_testCases); i++) {
+        for (int i = 0; i < countof(g_testCases); i++)
+        {
             printf("=== %s ===\n", g_testCases[i].name);
                     //"%3d, %5d, %12s  %2d, %10.1f, %10.1f, %10.1f, %I64d\n",
             printf("      Work    Name     Threads  Reads/sec  Writes/sec   Total/sec   CPU/Op\n");
 
             // Run this test for each desired thread count
-            for (int threadCount = 1; threadCount <= g_totalThreads; threadCount++) {
-                for (RwLock ** rwLock = g_testCases[i].rwLocks; *rwLock != NULL; rwLock++) {
+            for (int threadCount = 1; threadCount <= g_totalThreads; threadCount++)
+            {
+                for (RWLock ** rwLock = g_testCases[i].rwLocks; *rwLock != NULL; rwLock++)
+                {
                     testId++;
                     RunOneTest(
                         testId,
@@ -522,20 +580,24 @@ static void RunTests() {
     printf ("Done.  Duration: %10.4f\n", totalRunTime);
 }
 
-void Cleanup() {
+void Cleanup()
+{
     TestItem * item;
-    while (!g_testList.empty()) {
+    while (!g_testList.empty())
+    {
         item = g_testList.front();
         free(item);
     }
-    
-    while (!g_freeList.empty()) {
+
+    while (!g_freeList.empty())
+    {
         item = g_freeList.front();
         free(item);
     }
 }
 
-int main(int argc, char * argv[]) {
+int main(int argc, char * argv[])
+{
     InitTest();
     RunTests();
     Cleanup();

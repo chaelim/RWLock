@@ -11,6 +11,16 @@
 #pragma once
 #endif
 
+#include <atomic>
+
+// @@@ TODO:
+// @@@  C++11 (RAII, std::atomic, and etc.)
+// @@@  Port to other compilers like clang
+// @@@  Improve m_readers array and m_ownerThreadId.
+// @@@      Limitation of number of reader threads (MAX_RWLOCK_READER_COUNT)
+// @@@      Bitmap can be used
+// @@@  Perf comparison graphs
+
 // Maximum supported reader threads
 const unsigned MAX_RWLOCK_READER_COUNT = 64;
 
@@ -19,22 +29,22 @@ const unsigned MAX_RWLOCK_READER_COUNT = 64;
 //===========================================================================
 class CRWLock {
 private:
-    CCritSect       m_critSect; 
+    CCritSect       m_critSect;
     unsigned        m_ownerThreadId;
 
     // Private flag for every reader
-    volatile uint8_t    m_readers[MAX_RWLOCK_READER_COUNT]; 
-    volatile bool       m_writerPending;
+    volatile uint8_t    m_readers[MAX_RWLOCK_READER_COUNT];
+    std::atomic<bool>   m_writerPending;
 
 public:
-    CRWLock ();
-    void EnterRead ();
-    void EnterWrite ();
-    void LeaveRead ();
-    void LeaveWrite ();
+    CRWLock();
+    void EnterRead();
+    void EnterWrite();
+    void LeaveRead();
+    void LeaveWrite();
 };
 
-void InitRWLock ();
+void InitRWLock();
 
 #endif /* CRWLOCK_H */
 
@@ -52,7 +62,7 @@ void InitRWLock ();
 //
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE

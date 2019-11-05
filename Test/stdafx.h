@@ -25,7 +25,7 @@
 
 // Project includes
 #include "Random\randomc.h"
-#include "..\Src\Common.h"
-#include "..\Src\RWLock.h"
-#include "..\Src\RWLock2.h"
+#include <Common.h>
+#include <RWLock.h>
+#include <RWLock2.h>
 
